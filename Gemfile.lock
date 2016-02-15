@@ -38,6 +38,12 @@ GEM
       tzinfo (~> 1.1)
     ansi (1.5.0)
     arel (6.0.3)
+    autoprefixer-rails (6.3.3)
+      execjs
+      json
+    bootstrap-sass (3.3.6)
+      autoprefixer-rails (>= 5.2.1)
+      sass (>= 3.3.4)
     builder (3.2.2)
     byebug (3.4.0)
       columnize (~> 0.8)
@@ -185,11 +191,13 @@ GEM
     uglifier (2.5.3)
       execjs (>= 0.3.0)
       json (>= 1.8.0)
+    wdm (0.1.1)
 
 PLATFORMS
   x86-mingw32
 
 DEPENDENCIES
+  bootstrap-sass (= 3.3.6)
   byebug (= 3.4.0)
   coffee-rails (~> 4.1.0)
   guard-minitest (= 2.3.1)
@@ -208,6 +216,7 @@ DEPENDENCIES
   turbolinks (= 2.3.0)
   tzinfo-data
   uglifier (= 2.5.3)
+  wdm (= 0.1.1)
   web-console (= 2.0.0.beta3)
 
 BUNDLED WITH
