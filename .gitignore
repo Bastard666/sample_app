@@ -10,6 +10,7 @@
 # Ignore sublimetext project file
 /*.sublime-project
 /*.sublime-workspace
+/*.sublime-settings
 
 # Ignore the default SQLite database.
 /db/*.sqlite3
