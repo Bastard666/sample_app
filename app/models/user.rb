@@ -1,12 +1,12 @@
 class User < ActiveRecord::Base
   # Save user email in lower case
   before_save { email.downcase! }
-
-  # email regex pattern
-  VALID_EMAIL_REGEX = /\A[\w+\-.]+@[a-z\d\-]+(\.[a-z\d\-]+)*\.[a-z]+\z/i
   
   # Set for an encrypted password
   has_secure_password
+
+  # email regex pattern
+  VALID_EMAIL_REGEX = /\A[\w+\-.]+@[a-z\d\-]+(\.[a-z\d\-]+)*\.[a-z]+\z/i
 
   # Attributes validations
   validates :name,      presence: true, length: { maximum: 50 }
