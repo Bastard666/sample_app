@@ -76,4 +76,22 @@ class UserTest < ActiveSupport::TestCase
     assert_not @user.valid?
   end
 
+  test "authenticated? should return true for a user with valid remember token" do
+    token = User.new_token
+    @user.remember_token = token
+    @user.remember_digest = User.digest(token)
+    assert @user.authenticated?(token)
+  end
+
+  test "authenticated? should return false for a user with invalid remember token" do
+    token = User.new_token
+    @user.remember_token = token
+    @user.remember_digest = User.digest(token)
+    assert_not @user.authenticated?(User.new_token)
+  end
+
+  test "authenticated? should return false for a user with nil digest" do
+    assert_not @user.authenticated?('')
+  end
+
 end

@@ -6,7 +6,7 @@ class UserSignupTest < ActionDispatch::IntegrationTest
 
     # Assert user created and saved
     assert_difference 'User.count', 1 do
-    post_via_redirect users_path, user: {  name: "Valid User",
+      post_via_redirect users_path, user: {  name: "Valid User",
                               email: "valid.user@test.org",
                               password: "password",
                               password_confirmation: "password" }
@@ -15,6 +15,7 @@ class UserSignupTest < ActionDispatch::IntegrationTest
     # Assert user view is rendered with a success message
     assert_template 'users/show'
     assert_not flash.empty?
+    assert is_logged_in?
   end
 
   test "invalid signup informations" do
