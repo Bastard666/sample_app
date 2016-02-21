@@ -95,4 +95,13 @@ class UsersControllerTest < ActionController::TestCase
     assert_redirected_to users_url
   end
 
+  test "should not allow the admin attribute to be accessed via the web" do
+    log_in_as @archer
+    assert_not @archer.admin?
+    patch :update, id: @archer, user: { password:               "password",
+                                        password_confirmation:  "password",
+                                        admin:                  true }
+    assert_not @archer.reload.admin?
+  end
+
 end
