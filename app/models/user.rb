@@ -1,8 +1,11 @@
 class User < ActiveRecord::Base
-  attr_accessor :remember_token
+  attr_accessor :remember_token, :activation_token
 
   # Saves user email in lower case
-  before_save { email.downcase! }
+  before_save :downcase_email
+
+  # Add an activation digest before cration
+  before_create :create_activation_digest
   
   # Set for an encrypted password
   has_secure_password
@@ -30,9 +33,21 @@ class User < ActiveRecord::Base
   end
 
   # Returns true if the given token matches the digest.
-  def authenticated?(remember_token)
-    return false if remember_digest.nil?
-    BCrypt::Password.new(remember_digest).is_password?(remember_token)
+  def authenticated?(token_type, token)
+    digest = send("#{token_type}_digest") unless token_type.empty?
+    return false if digest.nil?
+    BCrypt::Password.new(digest).is_password?(token)
+  end
+
+  # Activate user
+  def activate
+    update_attribute(:activated,    true)
+    update_attribute(:activated_at, Time.zone.now)
+  end
+
+  # Send activation mail for the user
+  def send_activation_mail
+    UserMailer.account_activation(self).deliver_now
   end
 
   # Returns the hash digest of the given string.
@@ -46,5 +61,17 @@ class User < ActiveRecord::Base
   def self.new_token
     SecureRandom.urlsafe_base64
   end
+
+  private
+    # Converts email to all lower-case.
+    def downcase_email
+      self.email = email.downcase
+    end
+    
+    # Create an activation digest
+    def create_activation_digest
+      self.activation_token = User.new_token
+      self.activation_digest = User.digest(activation_token)
+    end
 
 end
