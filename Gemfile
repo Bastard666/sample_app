@@ -48,6 +48,9 @@ group :development, :test do
   # Spring speeds up development by keeping your application running in the
   # background. Read more: https://github.com/rails/spring
   gem 'spring',       '1.1.3'
+
+  # Code coverage
+  gem 'simplecov',    '0.11.2'
 end
 
 group :test do
