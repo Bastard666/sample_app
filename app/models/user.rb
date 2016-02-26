@@ -1,5 +1,5 @@
 class User < ActiveRecord::Base
-  attr_accessor :remember_token, :activation_token
+  attr_accessor :remember_token, :activation_token, :reset_token
 
   # Saves user email in lower case
   before_save :downcase_email
@@ -48,6 +48,23 @@ class User < ActiveRecord::Base
   # Send activation mail for the user
   def send_activation_mail
     UserMailer.account_activation(self).deliver_now
+  end
+
+  # Create a password reset token
+  def create_reset_digest
+    self.reset_token = User.new_token
+    update_attribute(:reset_digest, User.digest(reset_token))
+    update_attribute(:reset_sent_at, Time.zone.now)
+  end
+
+  # Send activation mail for the user
+  def send_password_reset_mail
+    UserMailer.password_reset(self).deliver_now
+  end
+
+  # Returns true if the password has expired
+  def password_reset_expired?
+    reset_sent_at && (reset_sent_at < 2.hours.ago)
   end
 
   # Returns the hash digest of the given string.
