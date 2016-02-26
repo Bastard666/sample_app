@@ -33,9 +33,8 @@ class PasswordResetsTest < ActionDispatch::IntegrationTest
     assert_template 'password_resets/new'
     # Indicating a valid email
     post password_resets_path, password_reset: { email: @user.email }
-    # Going to password reset page with an invalid token
-    user = assigns(:user)
     # Wrong email
+    user = assigns(:user)
     get edit_password_reset_path(user.reset_token, email: "")
     assert_redirected_to root_url
   end
@@ -46,9 +45,8 @@ class PasswordResetsTest < ActionDispatch::IntegrationTest
     assert_template 'password_resets/new'
     # Indicating a valid email
     post password_resets_path, password_reset: { email: @user.email }
-    # Going to password reset page with an invalid token
-    user = assigns(:user)
     # Inactive user
+    user = assigns(:user)
     user.toggle!(:activated)
     get edit_password_reset_path(user.reset_token, email: user.email)
     assert_redirected_to root_url
@@ -73,9 +71,8 @@ class PasswordResetsTest < ActionDispatch::IntegrationTest
     assert_template 'password_resets/new'
     # Indicating a valid email
     post password_resets_path, password_reset: { email: @user.email }
-    # Going to password reset page with an invalid token
-    user = assigns(:user)
     # Going to password reset page with right token
+    user = assigns(:user)
     get edit_password_reset_path(user.reset_token, email: user.email)
     assert_template 'password_resets/edit'
     assert_select "input[name=email][type=hidden][value=?]", user.email
@@ -87,15 +84,11 @@ class PasswordResetsTest < ActionDispatch::IntegrationTest
     assert_template 'password_resets/new'
     # Indicating a valid email
     post password_resets_path, password_reset: { email: @user.email }
-    # Going to password reset page with an invalid token
-    user = assigns(:user)
     # Going to password reset page with right token
+    user = assigns(:user)
     get edit_password_reset_path(user.reset_token, email: user.email)
     # Invalid password and confirmation
-    patch password_reset_path(user.reset_token),
-          email: user.email,
-          user: { password:               "foobaz",
-                  password_confirmation:  "barquux" }
+    patch password_reset_path(user.reset_token), email: user.email, user: { password: "foobaz", password_confirmation: "barquux" }
     assert_template 'password_resets/edit'
     assert_select 'div#error_explanation'
   end
@@ -106,15 +99,11 @@ class PasswordResetsTest < ActionDispatch::IntegrationTest
     assert_template 'password_resets/new'
     # Indicating a valid email
     post password_resets_path, password_reset: { email: @user.email }
-    # Going to password reset page with an invalid token
-    user = assigns(:user)
     # Going to password reset page with right token
+    user = assigns(:user)
     get edit_password_reset_path(user.reset_token, email: user.email)
     # Empty password
-    patch password_reset_path(user.reset_token),
-          email: user.email,
-          user: { password:               "",
-                  password_confirmation:  "" }
+    patch password_reset_path(user.reset_token), email: user.email, user: { password: "", password_confirmation: "" }
     assert_template 'password_resets/edit'
     assert_select 'div#error_explanation'
   end
@@ -125,17 +114,46 @@ class PasswordResetsTest < ActionDispatch::IntegrationTest
     assert_template 'password_resets/new'
     # Indicating a valid email
     post password_resets_path, password_reset: { email: @user.email }
-    # Going to password reset page with an invalid token
-    user = assigns(:user)
     # Going to password reset page with right token
+    user = assigns(:user)
     get edit_password_reset_path(user.reset_token, email: user.email)
     # Valid password and confirmation
-    patch password_reset_path(user.reset_token),
-          email: user.email,
-          user: { password:               "foobaz",
-                  password_confirmation:  "foobaz" }
+    patch password_reset_path(user.reset_token), email: user.email, user: { password: "foobaz", password_confirmation: "foobaz" }
     assert is_logged_in?
     assert_not flash.empty?
     assert_redirected_to user
+  end
+
+  test "expired token" do
+    # Going to ask for a password reset
+    get new_password_reset_path
+    # Indicating a valid email
+    post password_resets_path, password_reset: { email: @user.email }
+    # Going to password reset page with right token
+    @user = assigns(:user)
+    # Modifying the date the mail was sent at
+    @user.update_attribute(:reset_sent_at, 3.hours.ago)
+    # Trying to change password
+    patch password_reset_path(@user.reset_token), email: @user.email, user: { password: "password", password_confirmation:  "password" }
+    # Checking redirect and the presence of a message with the word "expired"
+    assert_response :redirect
+    follow_redirect!
+    assert_match /expired/i, response.body
+  end
+
+  test "edit form should not be accessible after password modification" do
+    # Going to ask for a password reset
+    get new_password_reset_path
+    # Indicating a valid email
+    post password_resets_path, password_reset: { email: @user.email }
+    # Going to password reset page with right token
+    @user = assigns(:user)
+    get edit_password_reset_path(@user.reset_token, email: @user.email)
+    # Valid password and confirmation
+    patch password_reset_path(@user.reset_token), email: @user.email, user: { password: "password", password_confirmation:  "password" }
+    assert_redirected_to @user
+    # Going to password reset page again
+    get edit_password_reset_path(@user.reset_token, email: @user.email)
+    assert_redirected_to root_url
   end
 end

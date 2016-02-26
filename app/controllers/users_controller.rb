@@ -35,6 +35,7 @@ class UsersController < ApplicationController
   # Controller for an existing user from database
   def show
     @user = User.find(params[:id])
+    redirect_to root_url and return unless @user.activated?
   end
 
   # Controller for editing an existing user from database

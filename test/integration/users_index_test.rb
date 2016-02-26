@@ -36,4 +36,15 @@ class UsersIndexTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "index does not show users not activated" do
+    log_in_as @admin
+    get users_path
+    assert_template 'users/index'
+    assert_select 'a[href=?]', user_path(@non_admin)
+    @non_admin.toggle!(:activated)
+    get users_path
+    assert_template 'users/index'
+    assert_select 'a[href=?]', user_path(@non_admin), count: 0
+  end
+
 end

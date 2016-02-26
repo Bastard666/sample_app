@@ -15,11 +15,8 @@ class User < ActiveRecord::Base
 
   # Attributes validations
   validates :name,      presence: true, length: { maximum: 50 }
-  validates :email,     presence: true, length: { maximum: 255 },
-                          format: { with: VALID_EMAIL_REGEX },
-                          uniqueness: { case_sensitive: false }
-  validates :password,  presence: true, length: { minimum: 6 },
-                          allow_nil: true
+  validates :email,     presence: true, length: { maximum: 255 }, format: { with: VALID_EMAIL_REGEX }, uniqueness: { case_sensitive: false }
+  validates :password,  presence: true, length: { minimum: 6 }, allow_nil: true
 
   # Remembers a user in the database for use in persistent sessions.
   def remember
@@ -41,8 +38,7 @@ class User < ActiveRecord::Base
 
   # Activate user
   def activate
-    update_attribute(:activated,    true)
-    update_attribute(:activated_at, Time.zone.now)
+    update_columns(activated: true, activated_at: Time.zone.now)
   end
 
   # Send activation mail for the user
@@ -53,8 +49,7 @@ class User < ActiveRecord::Base
   # Create a password reset token
   def create_reset_digest
     self.reset_token = User.new_token
-    update_attribute(:reset_digest, User.digest(reset_token))
-    update_attribute(:reset_sent_at, Time.zone.now)
+    update_columns(reset_digest: User.digest(reset_token), reset_sent_at: Time.zone.now)
   end
 
   # Send activation mail for the user
@@ -67,10 +62,13 @@ class User < ActiveRecord::Base
     reset_sent_at && (reset_sent_at < 2.hours.ago)
   end
 
+  def reset_password(params)
+    update_attributes(params.merge({ reset_digest: nil, reset_sent_at: nil }))
+  end
+
   # Returns the hash digest of the given string.
   def self.digest(string)
-    cost = ActiveModel::SecurePassword.min_cost ? BCrypt::Engine::MIN_COST :
-                                                  BCrypt::Engine.cost
+    cost = ActiveModel::SecurePassword.min_cost ? BCrypt::Engine::MIN_COST : BCrypt::Engine.cost
     BCrypt::Password.create(string, cost: cost)
   end
 
