@@ -7,8 +7,13 @@ gem 'rails',                    '4.2.2'
 gem 'bcrypt',                   '3.1.10'
 # Use faker to seed database
 gem 'faker',                    '1.6.1'
+# User will_paginate for resource lists pagination
 gem 'will_paginate',            '3.1.0'
 gem 'bootstrap-will_paginate',   '0.0.10'
+# User carrierwave, mini_magick and fog to upload images in posts
+gem 'carrierwave',             '0.10.0'
+gem 'mini_magick',             '4.4.0'
+gem 'fog',                     '1.37.0'
 # Use bootstrap
 gem 'bootstrap-sass',           '3.3.6'
 # Use SCSS for stylesheets

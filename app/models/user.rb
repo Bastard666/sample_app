@@ -1,4 +1,6 @@
 class User < ActiveRecord::Base
+  has_many :microposts, dependent: :destroy
+
   attr_accessor :remember_token, :activation_token, :reset_token
 
   # Saves user email in lower case
@@ -18,6 +20,20 @@ class User < ActiveRecord::Base
   validates :email,     presence: true, length: { maximum: 255 }, format: { with: VALID_EMAIL_REGEX }, uniqueness: { case_sensitive: false }
   validates :password,  presence: true, length: { minimum: 6 }, allow_nil: true
 
+  def feed
+    Micropost.where("user_id = ?", id)
+  end
+
+  # Returns true if the given token matches the digest.
+  def authenticated?(token_type, token)
+    digest = send("#{token_type}_digest") unless token_type.empty?
+    return false if digest.nil?
+    BCrypt::Password.new(digest).is_password?(token)
+  end
+
+  #############################################
+  ####### Authentication cookie methods #######
+  #############################################
   # Remembers a user in the database for use in persistent sessions.
   def remember
     self.remember_token = User.new_token
@@ -29,13 +45,9 @@ class User < ActiveRecord::Base
     update_attribute :remember_digest, nil
   end
 
-  # Returns true if the given token matches the digest.
-  def authenticated?(token_type, token)
-    digest = send("#{token_type}_digest") unless token_type.empty?
-    return false if digest.nil?
-    BCrypt::Password.new(digest).is_password?(token)
-  end
-
+  ############################################
+  ######## Account activation methods ########
+  ############################################
   # Activate user
   def activate
     update_columns(activated: true, activated_at: Time.zone.now)
@@ -46,6 +58,9 @@ class User < ActiveRecord::Base
     UserMailer.account_activation(self).deliver_now
   end
 
+  ############################################
+  ########## Password reset methods ##########
+  ############################################
   # Create a password reset token
   def create_reset_digest
     self.reset_token = User.new_token
@@ -66,6 +81,9 @@ class User < ActiveRecord::Base
     update_attributes(params.merge({ reset_digest: nil, reset_sent_at: nil }))
   end
 
+  #############################################
+  ## Static methods for new token and digest ##
+  #############################################
   # Returns the hash digest of the given string.
   def self.digest(string)
     cost = ActiveModel::SecurePassword.min_cost ? BCrypt::Engine::MIN_COST : BCrypt::Engine.cost
@@ -77,6 +95,9 @@ class User < ActiveRecord::Base
     SecureRandom.urlsafe_base64
   end
 
+  #############################################
+  ## Private methods used before saving user ##
+  #############################################
   private
     # Converts email to all lower-case.
     def downcase_email
