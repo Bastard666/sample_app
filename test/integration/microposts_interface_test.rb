@@ -14,6 +14,7 @@ class MicropostsInterfaceTest < ActionDispatch::IntegrationTest
     assert_select 'a[href = ?]', user_path(@michael)
     assert_select 'span', text: "#{@michael.microposts.count} microposts"
     assert_select 'div.field'
+    assert_select 'input[type="file"]'
     assert_select 'h3', text: 'Micropost Feed'
     assert_select 'li', id: /\Amicropost-\d+\z/i
     assert_select 'span.user'
@@ -40,12 +41,17 @@ class MicropostsInterfaceTest < ActionDispatch::IntegrationTest
     get root_url
     # Post of a valid micropost
     content = "This micropost really ties the room together"
+    picture = fixture_file_upload('test/fixtures/rails.png', 'image/png')
     assert_difference 'Micropost.count', 1 do
-      post microposts_path, micropost: { content: content }
+      post microposts_path, micropost: { content: content, picture: picture }
     end
+    micropost = assigns(:micropost)
+    assert micropost.picture?
     assert_redirected_to root_url
     follow_redirect!
     assert_match content, response.body
+    # debugger
+    assert_select 'img[src=?]', "/uploads/micropost/picture/#{micropost.id}/rails.png"
   end
 
   test "Deleting a post should decrease micropost count and redirect to the home page" do
@@ -70,4 +76,7 @@ class MicropostsInterfaceTest < ActionDispatch::IntegrationTest
     assert_template 'users/show'
     assert_select 'a', text: 'delete', count: 0
   end
+
+
+
 end
