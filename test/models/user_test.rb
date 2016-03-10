@@ -106,4 +106,42 @@ class UserTest < ActiveSupport::TestCase
     end
   end
 
+  test "should be able to follow and unfollow a user" do
+    # Initializing
+    michael = users(:michael)
+    archer = users(:archer)
+    # Checking initial relationship status
+    assert_not michael.following?(archer)
+    assert_not archer.followers.include?(michael)
+    # Adding a relationship
+    michael.follow archer
+    # Checking the relationship update
+    assert michael.following?(archer)
+    assert archer.followers.include?(michael)
+    # Destroying the relationship
+    michael.unfollow archer
+    # Checking the relationship update
+    assert_not michael.following?(archer)
+    assert_not archer.followers.include?(michael)
+  end
+
+  test "feed should have the post of the user and the followed users" do
+    # Initializing
+    michael = users :michael
+    archer  = users :archer
+    lana    = users :lana
+    # Michael's feed contains his posts
+    michael.microposts.each do |post|
+      assert michael.feed.include?(post)
+    end
+    # Michael's feed contains Lana's posts
+    lana.microposts.each do |post|
+      assert michael.feed.include?(post)
+    end
+    # Michael's feed does not contain Archer's posts
+    archer.microposts.each do |post|
+      assert_not michael.feed.include?(post)
+    end
+  end
+
 end

@@ -1,5 +1,12 @@
 class User < ActiveRecord::Base
   has_many :microposts, dependent: :destroy
+  
+  has_many :active_relationships,   class_name: "Relationship", foreign_key: "follower_id", dependent: :destroy
+  has_many :passive_relationships,  class_name: "Relationship", foreign_key: "followed_id", dependent: :destroy
+  
+  has_many :following, through: :active_relationships,  source: :followed
+  # Source is facultative since followers is the plural of follower
+  has_many :followers, through: :passive_relationships, source: :follower
 
   attr_accessor :remember_token, :activation_token, :reset_token
 
@@ -21,7 +28,8 @@ class User < ActiveRecord::Base
   validates :password,  presence: true, length: { minimum: 6 }, allow_nil: true
 
   def feed
-    Micropost.where("user_id = ?", id)
+    following_ids = "SELECT followed_id FROM relationships WHERE follower_id = :user_id"
+    Micropost.where("user_id IN (#{following_ids}) OR user_id = :user_id", user_id: id)
   end
 
   # Returns true if the given token matches the digest.
@@ -79,6 +87,24 @@ class User < ActiveRecord::Base
 
   def reset_password(params)
     update_attributes(params.merge({ reset_digest: nil, reset_sent_at: nil }))
+  end
+
+  ############################################
+  #### Following relationships management ####
+  ############################################
+  # Returns true if user is followed
+  def following?(other_user)
+    following.include?(other_user)
+  end
+
+  # Create the relationship to follow a user
+  def follow(other_user)
+    active_relationships.create(followed_id: other_user.id)
+  end
+
+  # Destroy the relationship to unfollow a user
+  def unfollow(other_user)
+    active_relationships.find_by(followed_id: other_user.id).destroy
   end
 
   #############################################
